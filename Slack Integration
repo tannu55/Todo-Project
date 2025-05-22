@@ -1,0 +1,6 @@
+arduino
+
+POST https://hooks.slack.com/services/...
+{
+  text: "Here is your todo summary: ..."
+}
