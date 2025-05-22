@@ -1,0 +1,11 @@
+Frontend (React) Starter
+
+npx create-react-app todo-frontend
+cd todo-frontend
+npm install axios
+
+Backend Starter (Node.js + TypeORM)
+
+npx typeorm init --name user-access-backend --database postgres
+cd user-access-backend
+npm install express bcrypt jsonwebtoken cors dotenv
