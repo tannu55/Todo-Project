@@ -1,0 +1,17 @@
+user-access-backend/
+├── src/
+│   ├── entity/
+│   │   ├── User.ts
+│   │   ├── Software.ts
+│   │   └── Request.ts
+│   ├── middleware/
+│   │   ├── auth.ts
+│   │   └── roles.ts
+│   ├── routes/
+│   │   ├── auth.ts
+│   │   ├── software.ts
+│   │   └── requests.ts
+│   └── index.ts
+├── ormconfig.json
+├── .env.example
+└── package.json
