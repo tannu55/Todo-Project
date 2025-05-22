@@ -1,0 +1,78 @@
+Backend (Node.js + Express) Starter
+
+mkdir todo-backend && cd todo-backend
+npm init -y
+npm install express cors dotenv openai axios
+
+index.js
+
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { Configuration, OpenAIApi } = require('openai');
+const axios = require('axios');
+
+dotenv.config();
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+let todos = []; // In-memory store for simplicity
+
+app.get('/todos', (req, res) => res.json(todos));
+
+app.post('/todos', (req, res) => {
+  const todo = { id: Date.now(), text: req.body.text, done: false };
+  todos.push(todo);
+  res.status(201).json(todo);
+});
+
+app.delete('/todos/:id', (req, res) => {
+  todos = todos.filter(t => t.id !== Number(req.params.id));
+  res.status(204).end();
+});
+
+app.post('/summarize', async (req, res) => {
+  try {
+    const pending = todos.filter(t => !t.done).map(t => `- ${t.text}`).join('\n');
+
+    const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
+    const openai = new OpenAIApi(configuration);
+
+    const prompt = `Summarize the following todo list:\n${pending}`;
+
+    const response = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const summary = response.data.choices[0].message.content;
+
+    // Send to Slack
+    await axios.post(process.env.SLACK_WEBHOOK_URL, { text: summary });
+
+    res.json({ success: true, summary });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: 'Something went wrong' });
+  }
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
