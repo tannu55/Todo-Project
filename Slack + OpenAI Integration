@@ -1,0 +1,39 @@
+// summarizeAndPost.js
+const { Configuration, OpenAIApi } = require('openai');
+const axios = require('axios');
+require('dotenv').config();
+
+async function summarizeAndPost(todos) {
+  const pending = todos.filter(t => !t.done).map(t => `- ${t.text}`).join('\n');
+
+  const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
+  const openai = new OpenAIApi(configuration);
+
+  const response = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo',
+    messages: [
+      { role: 'system', content: 'You are a helpful assistant that summarizes tasks.' },
+      { role: 'user', content: `Summarize the following todos:\n${pending}` },
+    ],
+  });
+
+  const summary = response.data.choices[0].message.content;
+
+  await axios.post(process.env.SLACK_WEBHOOK_URL, {
+    text: `📝 Todo Summary:\n${summary}`,
+  });
+
+  return summary;
+}
+
+// Example usage
+(async () => {
+  const todos = [
+    { text: 'Finish React assignment', done: false },
+    { text: 'Buy groceries', done: false },
+    { text: 'Call John', done: true },
+  ];
+
+  const summary = await summarizeAndPost(todos);
+  console.log('Posted summary:', summary);
+})();
