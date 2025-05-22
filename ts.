@@ -1,0 +1,97 @@
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+
+@Entity()
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ unique: true })
+  username: string;
+
+  @Column()
+  password: string;
+
+  @Column()
+  role: 'Employee' | 'Manager' | 'Admin';
+}
+
+Software.ts
+ts
+Copy
+Edit
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+
+@Entity()
+export class Software {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  name: string;
+
+  @Column("text")
+  description: string;
+
+  @Column("simple-array")
+  accessLevels: string[];
+}
+
+Request.ts
+ts
+Copy
+Edit
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { User } from "./User";
+import { Software } from "./Software";
+
+@Entity()
+export class Request {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @ManyToOne(() => User)
+  user: User;
+
+  @ManyToOne(() => Software)
+  software: Software;
+
+  @Column()
+  accessType: 'Read' | 'Write' | 'Admin';
+
+  @Column('text')
+  reason: string;
+
+  @Column()
+  status: 'Pending' | 'Approved' | 'Rejected';
+}
+
+auth.ts (middleware)
+ts
+Copy
+Edit
+import jwt from "jsonwebtoken";
+import { Request, Response, NextFunction } from "express";
+
+export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(403).json({ message: "Token missing" });
+
+  jwt.verify(token, process.env.JWT_SECRET!, (err, user) => {
+    if (err) return res.status(403).json({ message: "Invalid token" });
+    (req as any).user = user;
+    next();
+  });
+};
+
+roles.ts (middleware)
+ts
+Copy
+Edit
+export const authorizeRoles = (...roles: string[]) => {
+  return (req: any, res: any, next: any) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    next();
+  };
+};
